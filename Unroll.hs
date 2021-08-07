@@ -16,10 +16,23 @@ unroll (CpsLet var simple body) = UnrolledExtendEnv var (unroll_simple simple)
                                   : unroll body
 unroll (CpsLetrec name params pbody body) = UnrolledExtendEnvRec name params (unroll pbody)
                                             : unroll body
-unroll (CpsIf pred con alt) = [UnrolledIf
-                               (unroll_simple pred)
-                               (unroll con)
-                               (unroll alt)]
+unroll (CpsIf pred con alt) = UnrolledIf
+                              (unroll_simple pred)
+                              con'
+                              alt'
+                              : then'
+  where (con', alt', then') = merge (unroll con) (unroll alt)
 unroll (CpsCall rator rands) = [UnrolledApplication
                                 (unroll_simple rator)
                                 (map unroll_simple rands)]
+
+merge :: UnrolledCode -> UnrolledCode -> (UnrolledCode, UnrolledCode, UnrolledCode)
+merge branch1@(x : xs) branch2@(y : ys)
+  | branch1 == branch2 = ([], [], branch1)
+  | otherwise = sew (x, y) (merge xs ys)
+merge [] [] = ([], [], [])
+
+sew :: (UnrolledInstruction, UnrolledInstruction)
+    -> (UnrolledCode, UnrolledCode, UnrolledCode)
+    -> (UnrolledCode, UnrolledCode, UnrolledCode)
+sew (x, y) (xs, ys, zs) = (x : xs, y : ys, zs)
