@@ -47,25 +47,27 @@ data Cps = SimpleCps SimpleCps
                     cps_operands :: [SimpleCps]}
          deriving (Show, Read, Eq)
 
-data Literal = LiteralInt IntT
-             | LiteralLambda {literal_lambda_params :: [String],
-                              literal_lambda_body :: Cps,
-                              literal_lambda_env :: Environment}
-             deriving (Show, Read, Eq)
+-- data Literal = LiteralInt IntT
+--              | LiteralLambda {literal_lambda_params :: [String],
+--                               literal_lambda_body :: Cps,
+--                               literal_lambda_env :: Environment}
+--              deriving (Show, Read, Eq)
 
-data EnvironmentFrame = SimpleFrame String Literal
-                      | RecursiveFrame String [String] Cps
-                      deriving (Show, Read, Eq)
+-- data EnvironmentFrame = SimpleFrame String Literal
+--                       | RecursiveFrame String [String] Cps
+--                       deriving (Show, Read, Eq)
 
-type Environment = [EnvironmentFrame]
+-- type Environment = [EnvironmentFrame]
 
 data UnrolledInstruction = UnrolledReturn IntT
-                         | UnrolledCreateProc [String] Cps
+                         | UnrolledCreateProc [String] UnrolledCode
                          | UnrolledApplyEnv String
                          | UnrolledDiff UnrolledInstruction UnrolledInstruction
                          | UnrolledZeroPred UnrolledInstruction
                          | UnrolledExtendEnv String UnrolledInstruction
-                         | UnrolledExtendEnvRec String [String] Cps
+                         | UnrolledExtendEnvRec {unrolled_letrec_name :: String,
+                                                 unrolled_letrec_params :: [String],
+                                                 unrolled_letrec_proc_body :: UnrolledCode}
                          | UnrolledIf {unrolled_predicate :: UnrolledInstruction,
                                        unrolled_consequent :: [UnrolledInstruction],
                                        unrolled_alternative :: [UnrolledInstruction]}
