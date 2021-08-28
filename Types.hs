@@ -1,8 +1,6 @@
 module Types where
 
-type IntT = Int
-
-data Unoptimised = UnoptConst IntT
+data Unoptimised = UnoptConst Int
                  | UnoptVar String
                  | UnoptDiff {unopt_minuend :: Unoptimised,
                               unopt_subtrahend :: Unoptimised}
@@ -23,7 +21,7 @@ data Unoptimised = UnoptConst IntT
                               unopt_operands :: [Unoptimised]}
                  deriving (Show, Read, Eq)
 
-data SimpleCps = SimpleConst IntT
+data SimpleCps = SimpleConst Int
                | SimpleLambda {simple_lambda_params :: [String],
                                simple_lambda_body :: Cps}
                | SimpleVar String
@@ -47,19 +45,7 @@ data Cps = SimpleCps SimpleCps
                     cps_operands :: [SimpleCps]}
          deriving (Show, Read, Eq)
 
--- data Literal = LiteralInt IntT
---              | LiteralLambda {literal_lambda_params :: [String],
---                               literal_lambda_body :: Cps,
---                               literal_lambda_env :: Environment}
---              deriving (Show, Read, Eq)
-
--- data EnvironmentFrame = SimpleFrame String Literal
---                       | RecursiveFrame String [String] Cps
---                       deriving (Show, Read, Eq)
-
--- type Environment = [EnvironmentFrame]
-
-data UnrolledInstruction = UnrolledReturn IntT
+data UnrolledInstruction = UnrolledReturn Int
                          | UnrolledCreateProc [String] UnrolledCode
                          | UnrolledApplyEnv String
                          | UnrolledDiff UnrolledInstruction UnrolledInstruction
@@ -69,10 +55,39 @@ data UnrolledInstruction = UnrolledReturn IntT
                                                  unrolled_letrec_params :: [String],
                                                  unrolled_letrec_proc_body :: UnrolledCode}
                          | UnrolledIf {unrolled_predicate :: UnrolledInstruction,
-                                       unrolled_consequent :: [UnrolledInstruction],
-                                       unrolled_alternative :: [UnrolledInstruction]}
+                                       unrolled_consequent :: UnrolledCode,
+                                       unrolled_alternative :: UnrolledCode}
                          | UnrolledApplication UnrolledInstruction [UnrolledInstruction]
                          deriving (Show, Read, Eq)
-                                
 
 type UnrolledCode = [UnrolledInstruction]
+
+data Register = Val | Val1 | Val2 | Params | Var | Loc
+              deriving (Show, Read, Eq)
+
+data Subroutine = CreateProc | ApplyEnv | ExtendEnv | ExtendEnvRec | Apply
+                deriving (Show, Read, Eq)
+
+type Label = String
+
+data Literal = LiteralInt Int
+             | LiteralString String
+             | LiteralStringList [String]
+             | LiteralLabel Label
+             | LiteralBottom
+             deriving (Show, Read, Eq)
+
+data AsmInstruction = Push Register Literal
+                    | PopMove Register Register
+                    | Pop Register
+                    | Set Register Literal
+                    | Sub Register Register Register
+                    | PushOneIfZero Register Register
+                    | Jmp Label
+                    | Bz Register Label
+                    | Do Subroutine
+                    | GoBack
+                    | Swym
+                    deriving (Show, Read, Eq)
+
+type Asm = [(Label, AsmInstruction)]

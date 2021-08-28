@@ -1,4 +1,4 @@
-module Unroll where
+module Unroll (unroll) where
 import Types
 
 unroll_simple :: SimpleCps -> UnrolledInstruction

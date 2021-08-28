@@ -1,11 +1,8 @@
-module Cps where
+module Cps (convert) where
 import Data.List
-import Data.Time.Clock
 import System.IO.Unsafe
 import Types
-
-get_identifier :: IO String
-get_identifier = fmap show getCurrentTime
+import Unsafe
 
 send_to_cont :: SimpleCps -> SimpleCps -> Cps
 send_to_cont exp cont = CpsCall cont [exp]
