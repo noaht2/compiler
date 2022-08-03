@@ -1,24 +1,24 @@
 module Types where
 
 data Unoptimised = UnoptConst Int
-                 | UnoptVar String
-                 | UnoptDiff {unopt_minuend :: Unoptimised,
-                              unopt_subtrahend :: Unoptimised}
-                 | UnoptZeroPred Unoptimised
-                 | UnoptLambda {unopt_lambda_params :: [String],
-                                unopt_lambda_body :: Unoptimised}
-                 | UnoptIf {unopt_predicate :: Unoptimised,
-                            unopt_consequent :: Unoptimised,
-                            unopt_alternative :: Unoptimised}
-                 | UnoptLet {unopt_let_var :: String,
-                             unopt_let_exp :: Unoptimised,
-                             unopt_let_body :: Unoptimised}
-                 | UnoptLetrec {unopt_letrec_name :: String,
-                                unopt_letrec_params :: [String],
-                                unopt_letrec_proc_body :: Unoptimised,
-                                unopt_letrec_body :: Unoptimised}
-                 | UnoptCall {unopt_operator :: Unoptimised,
-                              unopt_operands :: [Unoptimised]}
+                   | UnoptVar String
+                   | UnoptDiff {unopt_minuend :: Unoptimised,
+                                unopt_subtrahend :: Unoptimised}
+                   | UnoptZeroPred Unoptimised
+                   | UnoptLambda {unopt_lambda_params :: [String],
+                                  unopt_lambda_body :: Unoptimised}
+                   | UnoptIf {unopt_predicate :: Unoptimised,
+                              unopt_consequent :: Unoptimised,
+                              unopt_alternative :: Unoptimised}
+                   | UnoptLet {unopt_let_var :: String,
+                               unopt_let_exp :: Unoptimised,
+                               unopt_let_body :: Unoptimised}
+                   | UnoptLetrec {unopt_letrec_name :: String,
+                                  unopt_letrec_params :: [String],
+                                  unopt_letrec_proc_body :: Unoptimised,
+                                  unopt_letrec_body :: Unoptimised}
+                   | UnoptCall {unopt_operator :: Unoptimised,
+                                unopt_operands :: [Unoptimised]}
                  deriving (Show, Read, Eq)
 
 data SimpleCps = SimpleConst Int
@@ -62,32 +62,24 @@ data UnrolledInstruction = UnrolledReturn Int
 
 type UnrolledCode = [UnrolledInstruction]
 
-data Register = Val | Val1 | Val2 | Params | Var | Loc
-              deriving (Show, Read, Eq)
-
-data Subroutine = CreateProc | ApplyEnv | ExtendEnv | ExtendEnvRec | Apply
-                deriving (Show, Read, Eq)
-
-type Label = String
-
-data Literal = LiteralInt Int
-             | LiteralString String
-             | LiteralStringList [String]
-             | LiteralLabel Label
-             | LiteralBottom
-             deriving (Show, Read, Eq)
-
-data AsmInstruction = Push Register Literal
-                    | PopMove Register Register
-                    | Pop Register
-                    | Set Register Literal
-                    | Sub Register Register Register
-                    | PushOneIfZero Register Register
-                    | Jmp Label
-                    | Bz Register Label
-                    | Do Subroutine
-                    | GoBack
+data AsmInstruction = PushVal Int
+                    | PopVal
+                    | PushLoc String
+                    | PopMoveVal1Val
+                    | PopMoveVal2Val
+                    | SetParams [String]
+                    | SetVar String
+                    | SubValVal1Val2
+                    | PushOneIfZeroValVal
+                    | Jmp String
+                    | BzVal String
+                    | Apply [Asm]
+                    | CreateProc
+                    | CreateRecProc String
+                    | ApplyEnv
+                    | ExtendEnv
                     | Swym
+                    | Done
                     deriving (Show, Read, Eq)
 
-type Asm = [(Label, AsmInstruction)]
+type Asm = [(String, AsmInstruction)]
