@@ -1,10 +1,7 @@
-test.mmo : test.mms
-	mmixal -x test.mms
+all : Main ;
 
-test.mms : Main
-	./Main
-Main : *.hs
+Main : *.hs ;
 	ghc Main.hs
 
-clean :
+clean : ;
 	rm -f *.mms *.mmo *.hi *.o Main *~

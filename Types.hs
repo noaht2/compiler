@@ -1,7 +1,7 @@
 module Types where
 
 data Unoptimised = UnoptConst Int
-                   | UnoptVar String
+                   | UnoptVar {unopt_var :: String}
                    | UnoptDiff {unopt_minuend :: Unoptimised,
                                 unopt_subtrahend :: Unoptimised}
                    | UnoptZeroPred Unoptimised
