@@ -9,7 +9,10 @@ make all
 mmix program.mmo
 ```
 
-## Example program
+## Example programs
 ```
 letrec tri(n) = (if zero?(n) then 0 else (n - (0 - (tri(n - 1))))) in (tri(10))
+```
+```
+λ(x, y).(x - (0 - y))(2, 3)
 ```
