@@ -10,10 +10,7 @@ apply_parser (Parser f) t = fst (head (filter ((== "") . snd) (f t)))
 
 instance Applicative Parser where
   pure = Parser . ((.) pure) . (,)
-  p <*> q = Parser (\s -> [(y, s''')
-                           | (f, s') <- parse p s,
-                             (x, s'') <- parse q s',
-                             (y, s''') <- parse (pure (f x)) s''])
+  (<*>) = ap
 
 instance Monad Parser where
   Parser x >>= f = Parser (\y -> let parsed = x y
