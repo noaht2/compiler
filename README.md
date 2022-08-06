@@ -5,7 +5,7 @@ This compiles a simple Turing-complete (except for memory constraints) programmi
 ## How to use
 ```sh
 make all
-./Main program.s  # The source code should end with .s
+./Main program.s  # The source code filename should end with .s
 mmix program.mmo
 ```
 
