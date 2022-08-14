@@ -5,16 +5,20 @@ This compiles a simple Turing-complete (except for memory constraints) programmi
 ## How to use
 ```sh
 make all
-./Main program.s  # The source code should end with .s
+./Main program.lisp  # The source code should end with .lisp
 mmix program.mmo
 ```
 
 ## Example programs
+```lisp
+(letrec tri (n)
+	(if (zero? n)
+		0
+		(- n (- 0 (tri (- n 1)))))
+	(tri 10))
 ```
-letrec tri(n) = (if zero?(n) then 0 else (n - (0 - (tri(n - 1))))) in (tri(10))
-```
-```
-λ(x, y).(x - (0 - y))(2, 3)
+```lisp
+((λ (x y) (− x (− 0 y))) 2 3)
 ```
 
 ## Technical details

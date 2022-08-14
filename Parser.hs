@@ -1,113 +1,55 @@
+{-# LANGUAGE DeriveFunctor, DeriveFoldable #-}
 module Parser where
 import Control.Applicative
 import Parsing
 import Types
 
-const_parser :: Parser Unoptimised
-const_parser = fmap UnoptConst builtin
+data Tree a = Leaf {leaf :: a} | Branch {branches :: [Tree a]} deriving (Eq,
+                                                                         Read,
+                                                                         Show,
+                                                                         Functor,
+                                                                         Foldable)
 
-var_parser = fmap UnoptVar
-             (some
-              (sat
-               (contains "qwertyuiopasdfghjklzxcvbnm_QWERTYUIOPASDFGHJKLZXCVBNM")))
-  where (x : xs) `contains` y = (x == y) || (xs `contains` y)
-        [] `contains` y = False
+contains :: Eq a => [a] -> a -> Bool
+(x : xs) `contains` y = (x == y) || (xs `contains` y)
+[] `contains` y = False
 
-diff_parser = do
-  minuend <- padded_numeric_parser <> padded_dynamic_parser
-  string " - "
-  subtrahend <- padded_numeric_parser <> padded_dynamic_parser
-  pure (minuend `UnoptDiff` subtrahend)
+allowed_characters
+  =
+  "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890−×÷“”‘’ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩω¬!£$%^&*-_=+/*;:@#~,<.>?"
 
-zero_pred_parser = do
-  string "zero?("
-  value <- numeric_parser <> dynamic_parser
-  char ')'
-  pure (UnoptZeroPred value)
+atom_parser :: Parser (Tree String)
+atom_parser = fmap Leaf (some (sat (contains allowed_characters)))
 
-monadic_lambda_parser = do
-  char 'λ'
-  param <- fmap unopt_var var_parser
-  char '.'
-  body <- padded_parser
-  pure (UnoptLambda [param] body)
+whitespace :: Parser String
+whitespace = some (sat (contains "\t\n\v\f\r "))
 
-polyadic_lambda_parser = do
-  string "λ("
-  param <- fmap unopt_var var_parser
-  params <- some (string ", " >> fmap unopt_var var_parser)
-  string ")."
-  body <- padded_parser
-  pure (UnoptLambda (param : params) body)
-
-lambda_parser = monadic_lambda_parser <> polyadic_lambda_parser
-
-if_parser = do
-  string "if "
-  predicate <- padded_numeric_parser <> padded_dynamic_parser
-  string " then "
-  consequent <- padded_parser
-  string " else "
-  alternative <- padded_parser
-  pure (UnoptIf predicate consequent alternative)
-
-let_parser = do
-  string "let "
-  var <- fmap unopt_var var_parser
-  string " = "
-  exp <- padded_parser
-  string " in "
-  body <- padded_parser
-  pure (UnoptLet var exp body)
-
-letrec_parser = do
-  string "letrec "
-  var <- fmap unopt_var var_parser
+list_parser :: Parser (Tree String)
+list_parser = do
   char '('
-  param <- fmap unopt_var var_parser
-  params <- many (string ", " >> fmap unopt_var var_parser)
-  string ") = "
-  proc_body <- padded_parser
-  string " in "
-  body <- padded_parser
-  pure (UnoptLetrec var (param : params) proc_body body)
-
-monadic_call_parser = do
-  operator <- padded_dynamic_parser <> lambda_parser
-  char '('
-  operand <- exp_parser
+  head <- tree_parser
+  tail <- many (whitespace >> tree_parser)
   char ')'
-  pure (UnoptCall operator [operand])
+  pure (Branch (head : tail))
 
-polyadic_call_parser = do
-  operator <- padded_dynamic_parser <> lambda_parser
-  char '('
-  operand <- exp_parser
-  operands <- some (string ", " >> exp_parser)
-  char ')'
-  pure (UnoptCall operator (operand : operands))
+tree_parser :: Parser (Tree String)
+tree_parser = atom_parser <|> list_parser
 
-call_parser = monadic_call_parser <> polyadic_call_parser
-
-padded_numeric_parser = zero_pred_parser <> do
-  char '('
-  exp <- diff_parser
-  char ')'
-  pure exp
-
-padded_dynamic_parser = var_parser <> const_parser <> do
-  char '('
-  exp <- if_parser <> let_parser <> letrec_parser <> call_parser
-  char ')'
-  pure exp
-
-padded_parser = padded_numeric_parser <> padded_dynamic_parser <> lambda_parser
-
-numeric_parser = const_parser <> diff_parser <> zero_pred_parser
-
-dynamic_parser = var_parser <> if_parser <> let_parser <> letrec_parser <> call_parser
-
-exp_parser = lambda_parser <> program_parser
+parse_tree :: Tree String -> Unoptimised
+parse_tree (Leaf s) = case reads s of
+                        [(n, "")] -> UnoptConst n
+                        _ -> UnoptVar s
+parse_tree (Branch [Leaf "−", t1, t2]) = (parse_tree t1) `UnoptDiff` (parse_tree t2)
+parse_tree (Branch [Leaf "-", t1, t2]) = (parse_tree t1) `UnoptDiff` (parse_tree t2)
+parse_tree (Branch [Leaf "zero?", t1]) = UnoptZeroPred (parse_tree t1)
+parse_tree (Branch [Leaf "λ", Branch ps, b]) = UnoptLambda (map leaf ps) (parse_tree b)
+parse_tree (Branch [Leaf "lambda", Branch ps, b]) = UnoptLambda (map leaf ps) (parse_tree b)
+parse_tree (Branch [Leaf "if", p, c, a]) = UnoptIf (parse_tree p) (parse_tree c) (parse_tree a)
+parse_tree (Branch [Leaf "let", Leaf v, e, b]) = UnoptLet v (parse_tree e) (parse_tree b)
+parse_tree (Branch [Leaf "letrec", Leaf n, Branch ps, pb, b]) =
+  UnoptLetrec n (map leaf ps) (parse_tree pb) (parse_tree b)
+parse_tree (Branch (operator : operands)) =
+  UnoptCall (parse_tree operator) (map parse_tree operands)
 
 program_parser :: Parser Unoptimised
-program_parser = numeric_parser <> dynamic_parser
+program_parser = fmap parse_tree tree_parser
