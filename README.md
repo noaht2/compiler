@@ -5,7 +5,7 @@ This compiles a simple Turing-complete (except for memory constraints) programmi
 ## How to use
 ```sh
 make all
-./Main program.lisp  # The source code should end with .lisp
+./Main program.lisp  # The source code filename should end with .lisp
 mmix program.mmo
 ```
 
