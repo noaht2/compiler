@@ -1,11 +1,11 @@
 # An MMIX compiler
 
-This compiles a simple Turing-complete (except for memory constraints) programming language to MMIXAL, the assembly language for [the MMIX computer](http://mmix.cs.hm.edu).
+This compiles a simple Turing‐complete programming language to MMIXAL, the assembly language for [the MMIX computer](http://mmix.cs.hm.edu).
 
 ## How to use
 ```sh
 make all
-./Main program.lisp  # The source code filename should end with .lisp
+./Main program.lisp  # The filename of the source code should end in .lisp
 mmix program.mmo
 ```
 
@@ -23,8 +23,8 @@ mmix program.mmo
 
 ## Technical details
 The parser is built out of monadic parser combinators.
-The compiler converts the programs to continuation-passing style.
-The language is dynamically typed with first-class functions and lexical scope.
+The compiler converts the programs to continuation‐passing style.
+The language is dynamically typed with first‐class functions and lexical scope.
 
 ## Books used
 - Richard Bird. [*Thinking functionally with Haskell*](https://www.cambridge.org/gb/academic/subjects/computer-science/programming-languages-and-applied-logic/thinking-functionally-haskell?format=HB&isbn=9781107087200). Cambridge University Press
